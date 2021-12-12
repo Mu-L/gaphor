@@ -2,5 +2,7 @@
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
 export PATH="${HERE}/${PATH:+:$PATH}"
+export LD_LIBRARY_PATH="${HERE}/usr/lib/${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export PYTHONPATH="${HERE}/usr/lib/python3.10/site-packages/${PYTHONPATH:+:$PYTHONPATH}"
 EXEC=$(grep -e '^Exec=.*' "${HERE}"/*.desktop | head -n 1 | cut -d "=" -f 2 | cut -d " " -f 1)
 exec "${EXEC}" "$@"
