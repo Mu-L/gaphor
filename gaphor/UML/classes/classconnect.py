@@ -6,19 +6,17 @@ from gaphor import UML
 from gaphor.core.modeling import Element, Presentation
 from gaphor.diagram.connectors import (
     Connector,
+    DirectionalRelationshipConnect,
     RelationshipConnect,
-    UnaryRelationshipConnect,
 )
 from gaphor.diagram.presentation import Classified, Named
 from gaphor.UML.classes.association import AssociationItem
 from gaphor.UML.classes.dependency import DependencyItem
-from gaphor.UML.classes.generalization import GeneralizationItem
-from gaphor.UML.classes.interfacerealization import InterfaceRealizationItem
 from gaphor.UML.recipes import owner_package
 
 
 @Connector.register(Named, DependencyItem)
-class DependencyConnect(RelationshipConnect):
+class DependencyConnect(DirectionalRelationshipConnect):
     """Connect two Named elements using a Dependency."""
 
     line: DependencyItem
@@ -60,18 +58,8 @@ class DependencyConnect(RelationshipConnect):
         return line.dependency_type
 
 
-@Connector.register(Classified, GeneralizationItem)
-class GeneralizationConnect(RelationshipConnect):
-    """Connect Classifiers with a Generalization relationship."""
-
-    def connect_subject(self, handle):
-        self.line.subject = self.relationship_or_new(
-            UML.Generalization, UML.Generalization.specific, UML.Generalization.general
-        )
-
-
 @Connector.register(Classified, AssociationItem)
-class AssociationConnect(UnaryRelationshipConnect):
+class AssociationConnect(RelationshipConnect):
     """Connect association to classifier."""
 
     line: AssociationItem
@@ -169,34 +157,3 @@ class AssociationConnect(UnaryRelationshipConnect):
         del self.line.head_subject
         del self.line.tail_subject
         super().disconnect_subject(handle)
-
-
-@Connector.register(Named, InterfaceRealizationItem)
-class InterfaceRealizationConnect(RelationshipConnect):
-    """Connect Interface and a BehavioredClassifier using an
-    InterfaceRealization."""
-
-    def allow(self, handle, port):
-        line = self.line
-        element = self.element
-
-        # Element at the head should be an Interface
-        if handle is line.head and not isinstance(element.subject, UML.Interface):
-            return None
-
-        # Element at the tail should be a BehavioredClassifier
-        if handle is line.tail and not isinstance(
-            element.subject, UML.BehavioredClassifier
-        ):
-            return None
-
-        return super().allow(handle, port)
-
-    def connect_subject(self, handle):
-        """Perform implementation relationship connection."""
-        relation = self.relationship_or_new(
-            UML.InterfaceRealization,
-            UML.InterfaceRealization.contract,
-            UML.InterfaceRealization.implementatingClassifier,
-        )
-        self.line.subject = relation
